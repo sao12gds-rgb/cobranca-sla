@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Cobrança de Entrega em Atraso</title>
+  <meta charset="UTF-8" />
+  <title>Cobrança SLA - AWB</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <style>
     * {
@@ -17,18 +19,17 @@
     }
 
     .container {
-      max-width: 900px;
-      margin: 40px auto;
-      background: #ffffff;
+      max-width: 1200px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 28px;
       border-radius: 14px;
-      padding: 30px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.08);
     }
 
     h1 {
-      margin-top: 0;
+      margin: 0;
       color: #003b73;
-      font-size: 26px;
     }
 
     .subtitulo {
@@ -36,52 +37,28 @@
       margin-bottom: 25px;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
-    }
-
-    label {
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    textarea {
-      margin-top: 20px;
-      height: 340px;
-      resize: vertical;
-      line-height: 1.5;
+    .box {
       background: #f9fafb;
+      border: 1px solid #d1d5db;
+      padding: 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
     }
 
-    .botoes {
-      display: flex;
-      gap: 12px;
-      margin-top: 22px;
-      flex-wrap: wrap;
+    input, button {
+      padding: 11px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
     }
 
     button {
-      border: none;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
+      border: none;
+      font-weight: bold;
     }
 
-    .principal {
+    .azul {
       background: #005baa;
       color: white;
     }
@@ -96,107 +73,291 @@
       color: #111827;
     }
 
-    .aviso {
-      margin-top: 15px;
-      font-size: 13px;
-      color: #6b7280;
+    .vermelho {
+      background: #dc2626;
+      color: white;
     }
 
-    @media (max-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .linha-acoes {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
 
-      .container {
-        margin: 20px;
-        padding: 22px;
-      }
+    .resumo {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .card {
+      background: #f3f4f6;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #003b73;
+      color: white;
+      padding: 10px;
+      text-align: left;
+    }
+
+    td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 9px;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .email-input {
+      width: 230px;
+    }
+
+    .aviso {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 12px;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <h1>Cobrança de Entrega em Atraso</h1>
-    <p class="subtitulo">Preencha os dados da carga para gerar o e-mail de cobrança com SLA vencido.</p>
+<div class="container">
+  <h1>Cobrança de SLA em Atraso</h1>
+  <p class="subtitulo">
+    Importe a planilha AWB Status. O sistema filtra AWBs pendentes e com SLA vencido.
+  </p>
 
-    <div class="grid">
-      <div>
-        <label>E-mail Destinatário</label>
-        <input type="email" id="destinatario" placeholder="exemplo@empresa.com">
-      </div>
+  <div class="box">
+    <label><strong>Importar planilha Excel:</strong></label><br><br>
+    <input type="file" id="arquivoExcel" accept=".xlsx,.xls" />
 
-      <div>
-        <label>AWB</label>
-        <input type="text" id="awb" placeholder="Ex: 55362226">
-      </div>
-
-      <div>
-        <label>Origem</label>
-        <input type="text" id="origem" placeholder="Ex: SAO12">
-      </div>
-
-      <div>
-        <label>Destino</label>
-        <input type="text" id="destino" placeholder="Ex: SDU">
-      </div>
-
-      <div>
-        <label>Status Atual</label>
-        <select id="status">
-          <option value="Pendente Desembarque">Pendente Desembarque</option>
-          <option value="Pendente Tratativa">Pendente Tratativa</option>
-          <option value="Pendente Saída para Entrega">Pendente Saída para Entrega</option>
-          <option value="Pendente Entrega">Pendente Entrega</option>
-          <option value="Em atraso">Em atraso</option>
-        </select>
-      </div>
-
-      <div>
-        <label>SLA Previsto</label>
-        <input type="date" id="sla">
-      </div>
+    <div class="linha-acoes">
+      <button class="azul" onclick="processarPlanilha()">Processar Planilha</button>
+      <button class="cinza" onclick="limparTudo()">Limpar</button>
     </div>
+  </div>
 
-    <div class="botoes">
-      <button class="principal" onclick="gerarEmail()">Gerar E-mail</button>
-      <button class="verde" onclick="abrirOutlook()">Abrir no Outlook Web</button>
-      <button class="cinza" onclick="copiarEmail()">Copiar Texto</button>
-      <button class="cinza" onclick="limparCampos()">Limpar</button>
-    </div>
-
-    <textarea id="textoEmail" placeholder="O texto do e-mail aparecerá aqui..."></textarea>
+  <div class="box">
+    <label><strong>E-mail padrão manual:</strong></label><br><br>
+    <input type="email" id="emailPadrao" placeholder="Digite o e-mail da base/responsável" style="width: 350px;">
+    <button class="verde" onclick="aplicarEmailTodos()">Aplicar para todos</button>
 
     <p class="aviso">
-      O botão “Abrir no Outlook Web” abre uma nova mensagem com destinatário, assunto e corpo preenchidos.
+      Você pode preencher um e-mail por linha ou aplicar o mesmo e-mail para todas as AWBs filtradas.
     </p>
   </div>
 
+  <div class="resumo">
+    <div class="card">Total na planilha: <span id="totalPlanilha">0</span></div>
+    <div class="card">Filtrados para cobrança: <span id="totalFiltrado">0</span></div>
+  </div>
+
+  <div id="resultado"></div>
+</div>
+
 <script>
+let dadosFiltrados = [];
+
+function converterDataExcel(valor) {
+  if (!valor) return null;
+
+  if (typeof valor === "number") {
+    const data = XLSX.SSF.parse_date_code(valor);
+    return new Date(data.y, data.m - 1, data.d);
+  }
+
+  if (typeof valor === "string") {
+    const partes = valor.split(/[\/\-]/);
+
+    if (partes.length === 3) {
+      if (partes[0].length === 4) {
+        return new Date(partes[0], partes[1] - 1, partes[2]);
+      } else {
+        return new Date(partes[2], partes[1] - 1, partes[0]);
+      }
+    }
+  }
+
+  return null;
+}
+
 function formatarData(data) {
   if (!data) return "";
 
-  const partes = data.split("-");
-  return partes[2] + "/" + partes[1] + "/" + partes[0];
+  const dia = String(data.getDate()).padStart(2, "0");
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const ano = data.getFullYear();
+
+  return `${dia}/${mes}/${ano}`;
 }
 
-function gerarEmail() {
-  const awb = document.getElementById("awb").value.trim();
-  const origem = document.getElementById("origem").value.trim();
-  const destino = document.getElementById("destino").value.trim();
-  const status = document.getElementById("status").value;
-  const sla = formatarData(document.getElementById("sla").value);
+function montarAWB(linha) {
+  const prefixo = linha["AWBPrefix"] || "";
+  const numero = linha["AWBNumber"] || "";
 
-  const texto = `Prezados,
+  if (prefixo && numero) {
+    return `${prefixo}${numero}`;
+  }
+
+  return numero || linha["AWB"] || "";
+}
+
+function processarPlanilha() {
+  const arquivo = document.getElementById("arquivoExcel").files[0];
+
+  if (!arquivo) {
+    alert("Selecione uma planilha Excel.");
+    return;
+  }
+
+  const leitor = new FileReader();
+
+  leitor.onload = function(e) {
+    const dados = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(dados, { type: "array" });
+    const primeiraAba = workbook.SheetNames[0];
+    const planilha = workbook.Sheets[primeiraAba];
+    const linhas = XLSX.utils.sheet_to_json(planilha);
+
+    document.getElementById("totalPlanilha").innerText = linhas.length;
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    dadosFiltrados = linhas.filter(linha => {
+      const status = String(linha["StatusDescription"] || "").trim();
+      const sla = converterDataExcel(linha["ApproxSLA"]);
+
+      if (!sla) return false;
+
+      sla.setHours(0, 0, 0, 0);
+
+      const statusValido =
+        status === "Pendente Entrega" ||
+        status === "Pendente Desembarque";
+
+      const slaVencido = sla < hoje;
+
+      return statusValido && slaVencido;
+    }).map(linha => {
+      return {
+        awb: montarAWB(linha),
+        origem: linha["OriginCode"] || "",
+        destino: linha["DestinationCode"] || "",
+        status: linha["StatusDescription"] || "",
+        sla: converterDataExcel(linha["ApproxSLA"]),
+        email: ""
+      };
+    });
+
+    document.getElementById("totalFiltrado").innerText = dadosFiltrados.length;
+    renderizarTabela();
+  };
+
+  leitor.readAsArrayBuffer(arquivo);
+}
+
+function renderizarTabela() {
+  const resultado = document.getElementById("resultado");
+
+  if (dadosFiltrados.length === 0) {
+    resultado.innerHTML = "<p><strong>Nenhuma AWB pendente com SLA vencido foi encontrada.</strong></p>";
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>AWB</th>
+          <th>Origem</th>
+          <th>Destino</th>
+          <th>Status</th>
+          <th>SLA</th>
+          <th>E-mail</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  dadosFiltrados.forEach((item, index) => {
+    html += `
+      <tr>
+        <td>${item.awb}</td>
+        <td>${item.origem}</td>
+        <td>${item.destino}</td>
+        <td>${item.status}</td>
+        <td>${formatarData(item.sla)}</td>
+        <td>
+          <input 
+            class="email-input" 
+            type="email" 
+            id="email-${index}" 
+            placeholder="email@empresa.com"
+            value="${item.email}"
+            onchange="atualizarEmail(${index}, this.value)"
+          >
+        </td>
+        <td>
+          <button class="vermelho" onclick="abrirOutlook(${index})">Cobrar</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  resultado.innerHTML = html;
+}
+
+function atualizarEmail(index, email) {
+  dadosFiltrados[index].email = email;
+}
+
+function aplicarEmailTodos() {
+  const email = document.getElementById("emailPadrao").value.trim();
+
+  if (!email) {
+    alert("Digite um e-mail padrão.");
+    return;
+  }
+
+  dadosFiltrados.forEach(item => {
+    item.email = email;
+  });
+
+  renderizarTabela();
+}
+
+function gerarTextoEmail(item) {
+  return `Prezados,
 
 Identificamos que a remessa abaixo encontra-se com o SLA vencido, sem registro de entrega até o momento:
 
-AWB: ${awb}
-Origem: ${origem}
-Destino: ${destino}
-Status Atual: ${status}
-SLA Previsto: ${sla}
+AWB: ${item.awb}
+Origem: ${item.origem}
+Destino: ${item.destino}
+Status Atual: ${item.status}
+SLA Previsto: ${formatarData(item.sla)}
 
 Solicitamos atuação imediata para conclusão da entrega e regularização da ocorrência.
 
@@ -207,42 +368,37 @@ Em caso de qualquer impedimento operacional, favor informar imediatamente para a
 Aguardamos posicionamento com prioridade.
 
 Atenciosamente,`;
-
-  document.getElementById("textoEmail").value = texto;
-  return texto;
 }
 
-function abrirOutlook() {
-  const destinatario = document.getElementById("destinatario").value.trim();
-  const awb = document.getElementById("awb").value.trim();
-  const texto = gerarEmail();
+function abrirOutlook(index) {
+  const item = dadosFiltrados[index];
+  const emailDigitado = document.getElementById(`email-${index}`).value.trim();
 
-  const assunto = `Cobrança de Entrega em Atraso - AWB ${awb}`;
+  if (!emailDigitado) {
+    alert("Digite o e-mail do destinatário antes de cobrar.");
+    return;
+  }
+
+  item.email = emailDigitado;
+
+  const assunto = `Cobrança de Entrega em Atraso - AWB ${item.awb}`;
+  const corpo = gerarTextoEmail(item);
 
   const url = "https://outlook.office.com/mail/deeplink/compose"
-    + "?to=" + encodeURIComponent(destinatario)
+    + "?to=" + encodeURIComponent(item.email)
     + "&subject=" + encodeURIComponent(assunto)
-    + "&body=" + encodeURIComponent(texto);
+    + "&body=" + encodeURIComponent(corpo);
 
   window.open(url, "_blank");
 }
 
-function copiarEmail() {
-  const texto = gerarEmail();
-
-  navigator.clipboard.writeText(texto).then(function() {
-    alert("Texto copiado com sucesso!");
-  });
-}
-
-function limparCampos() {
-  document.getElementById("destinatario").value = "";
-  document.getElementById("awb").value = "";
-  document.getElementById("origem").value = "";
-  document.getElementById("destino").value = "";
-  document.getElementById("status").value = "Pendente Desembarque";
-  document.getElementById("sla").value = "";
-  document.getElementById("textoEmail").value = "";
+function limparTudo() {
+  document.getElementById("arquivoExcel").value = "";
+  document.getElementById("emailPadrao").value = "";
+  document.getElementById("totalPlanilha").innerText = "0";
+  document.getElementById("totalFiltrado").innerText = "0";
+  document.getElementById("resultado").innerHTML = "";
+  dadosFiltrados = [];
 }
 </script>
 
