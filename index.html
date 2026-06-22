@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Cobrança SLA - AWB</title>
+  <title>Cobrança SLA por Base</title>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
@@ -99,10 +99,38 @@
       font-weight: bold;
     }
 
+    .base-card {
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+
+    .base-topo {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .base-titulo {
+      font-size: 18px;
+      font-weight: bold;
+      color: #003b73;
+    }
+
+    .email-input {
+      width: 320px;
+      max-width: 100%;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 18px;
+      margin-top: 12px;
       font-size: 14px;
     }
 
@@ -118,14 +146,6 @@
       padding: 9px;
     }
 
-    tr:hover {
-      background: #f9fafb;
-    }
-
-    .email-input {
-      width: 230px;
-    }
-
     .aviso {
       font-size: 13px;
       color: #6b7280;
@@ -137,9 +157,9 @@
 <body>
 
 <div class="container">
-  <h1>Cobrança de SLA em Atraso</h1>
+  <h1>Cobrança de SLA em Atraso por Base</h1>
   <p class="subtitulo">
-    Importe a planilha AWB Status. O sistema filtra AWBs pendentes e com SLA vencido.
+    Importe a planilha AWB Status. O sistema filtra AWBs pendentes com SLA vencido e agrupa por destino/base.
   </p>
 
   <div class="box">
@@ -155,23 +175,24 @@
   <div class="box">
     <label><strong>E-mail padrão manual:</strong></label><br><br>
     <input type="email" id="emailPadrao" placeholder="Digite o e-mail da base/responsável" style="width: 350px;">
-    <button class="verde" onclick="aplicarEmailTodos()">Aplicar para todos</button>
+    <button class="verde" onclick="aplicarEmailTodos()">Aplicar para todas as bases</button>
 
     <p class="aviso">
-      Você pode preencher um e-mail por linha ou aplicar o mesmo e-mail para todas as AWBs filtradas.
+      Você também pode preencher um e-mail diferente para cada base.
     </p>
   </div>
 
   <div class="resumo">
     <div class="card">Total na planilha: <span id="totalPlanilha">0</span></div>
-    <div class="card">Filtrados para cobrança: <span id="totalFiltrado">0</span></div>
+    <div class="card">AWBs para cobrança: <span id="totalFiltrado">0</span></div>
+    <div class="card">Bases com atraso: <span id="totalBases">0</span></div>
   </div>
 
   <div id="resultado"></div>
 </div>
 
 <script>
-let dadosFiltrados = [];
+let gruposPorBase = {};
 
 function converterDataExcel(valor) {
   if (!valor) return null;
@@ -239,7 +260,7 @@ function processarPlanilha() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    dadosFiltrados = linhas.filter(linha => {
+    const filtrados = linhas.filter(linha => {
       const status = String(linha["StatusDescription"] || "").trim();
       const sla = converterDataExcel(linha["ApproxSLA"]);
 
@@ -258,79 +279,111 @@ function processarPlanilha() {
       return {
         awb: montarAWB(linha),
         origem: linha["OriginCode"] || "",
-        destino: linha["DestinationCode"] || "",
+        destino: linha["DestinationCode"] || "SEM DESTINO",
         status: linha["StatusDescription"] || "",
-        sla: converterDataExcel(linha["ApproxSLA"]),
-        email: ""
+        sla: converterDataExcel(linha["ApproxSLA"])
       };
     });
 
-    document.getElementById("totalFiltrado").innerText = dadosFiltrados.length;
-    renderizarTabela();
+    gruposPorBase = {};
+
+    filtrados.forEach(item => {
+      const base = item.destino;
+
+      if (!gruposPorBase[base]) {
+        gruposPorBase[base] = {
+          base: base,
+          email: "",
+          cargas: []
+        };
+      }
+
+      gruposPorBase[base].cargas.push(item);
+    });
+
+    document.getElementById("totalFiltrado").innerText = filtrados.length;
+    document.getElementById("totalBases").innerText = Object.keys(gruposPorBase).length;
+
+    renderizarGrupos();
   };
 
   leitor.readAsArrayBuffer(arquivo);
 }
 
-function renderizarTabela() {
+function renderizarGrupos() {
   const resultado = document.getElementById("resultado");
+  const bases = Object.keys(gruposPorBase).sort();
 
-  if (dadosFiltrados.length === 0) {
+  if (bases.length === 0) {
     resultado.innerHTML = "<p><strong>Nenhuma AWB pendente com SLA vencido foi encontrada.</strong></p>";
     return;
   }
 
-  let html = `
-    <table>
-      <thead>
-        <tr>
-          <th>AWB</th>
-          <th>Origem</th>
-          <th>Destino</th>
-          <th>Status</th>
-          <th>SLA</th>
-          <th>E-mail</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+  let html = "";
 
-  dadosFiltrados.forEach((item, index) => {
+  bases.forEach(base => {
+    const grupo = gruposPorBase[base];
+
     html += `
-      <tr>
-        <td>${item.awb}</td>
-        <td>${item.origem}</td>
-        <td>${item.destino}</td>
-        <td>${item.status}</td>
-        <td>${formatarData(item.sla)}</td>
-        <td>
-          <input 
-            class="email-input" 
-            type="email" 
-            id="email-${index}" 
-            placeholder="email@empresa.com"
-            value="${item.email}"
-            onchange="atualizarEmail(${index}, this.value)"
-          >
-        </td>
-        <td>
-          <button class="vermelho" onclick="abrirOutlook(${index})">Cobrar</button>
-        </td>
-      </tr>
+      <div class="base-card">
+        <div class="base-topo">
+          <div class="base-titulo">
+            Base: ${base} | Total de AWBs: ${grupo.cargas.length}
+          </div>
+
+          <div>
+            <input
+              class="email-input"
+              type="email"
+              id="email-${base}"
+              placeholder="E-mail da base"
+              value="${grupo.email}"
+              onchange="atualizarEmailBase('${base}', this.value)"
+            >
+
+            <button class="vermelho" onclick="abrirOutlookBase('${base}')">
+              Cobrar Base
+            </button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>AWB</th>
+              <th>Origem</th>
+              <th>Destino</th>
+              <th>Status</th>
+              <th>SLA</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    grupo.cargas.forEach(item => {
+      html += `
+        <tr>
+          <td>${item.awb}</td>
+          <td>${item.origem}</td>
+          <td>${item.destino}</td>
+          <td>${item.status}</td>
+          <td>${formatarData(item.sla)}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
     `;
   });
-
-  html += `
-      </tbody>
-    </table>
-  `;
 
   resultado.innerHTML = html;
 }
 
-function atualizarEmail(index, email) {
-  dadosFiltrados[index].email = email;
+function atualizarEmailBase(base, email) {
+  gruposPorBase[base].email = email;
 }
 
 function aplicarEmailTodos() {
@@ -341,27 +394,29 @@ function aplicarEmailTodos() {
     return;
   }
 
-  dadosFiltrados.forEach(item => {
-    item.email = email;
+  Object.keys(gruposPorBase).forEach(base => {
+    gruposPorBase[base].email = email;
   });
 
-  renderizarTabela();
+  renderizarGrupos();
 }
 
-function gerarTextoEmail(item) {
+function gerarTextoEmailBase(grupo) {
+  let listaAWBs = "";
+
+  grupo.cargas.forEach(item => {
+    listaAWBs += `AWB: ${item.awb} | Origem: ${item.origem} | Destino: ${item.destino} | Status: ${item.status} | SLA: ${formatarData(item.sla)}\n`;
+  });
+
   return `Prezados,
 
-Identificamos que a remessa abaixo encontra-se com o SLA vencido, sem registro de entrega até o momento:
+Identificamos que as remessas abaixo encontram-se com o SLA vencido, sem registro de entrega até o momento:
 
-AWB: ${item.awb}
-Origem: ${item.origem}
-Destino: ${item.destino}
-Status Atual: ${item.status}
-SLA Previsto: ${formatarData(item.sla)}
+${listaAWBs}
 
-Solicitamos atuação imediata para conclusão da entrega e regularização da ocorrência.
+Solicitamos atuação imediata para conclusão das entregas e regularização das ocorrências.
 
-Pedimos, por gentileza, retorno com a previsão atualizada de entrega e detalhamento das ações adotadas para tratativa do embarque.
+Pedimos, por gentileza, retorno com a previsão atualizada de entrega e detalhamento das ações adotadas para tratativa dos embarques.
 
 Em caso de qualquer impedimento operacional, favor informar imediatamente para alinhamento conjunto e mitigação dos impactos ao cliente.
 
@@ -370,22 +425,22 @@ Aguardamos posicionamento com prioridade.
 Atenciosamente,`;
 }
 
-function abrirOutlook(index) {
-  const item = dadosFiltrados[index];
-  const emailDigitado = document.getElementById(`email-${index}`).value.trim();
+function abrirOutlookBase(base) {
+  const grupo = gruposPorBase[base];
+  const emailDigitado = document.getElementById(`email-${base}`).value.trim();
 
   if (!emailDigitado) {
-    alert("Digite o e-mail do destinatário antes de cobrar.");
+    alert("Digite o e-mail da base antes de cobrar.");
     return;
   }
 
-  item.email = emailDigitado;
+  grupo.email = emailDigitado;
 
-  const assunto = `Cobrança de Entrega em Atraso - AWB ${item.awb}`;
-  const corpo = gerarTextoEmail(item);
+  const assunto = `Cobrança de Entregas em Atraso - Base ${base} - ${grupo.cargas.length} AWB(s)`;
+  const corpo = gerarTextoEmailBase(grupo);
 
   const url = "https://outlook.office.com/mail/deeplink/compose"
-    + "?to=" + encodeURIComponent(item.email)
+    + "?to=" + encodeURIComponent(grupo.email)
     + "&subject=" + encodeURIComponent(assunto)
     + "&body=" + encodeURIComponent(corpo);
 
@@ -397,8 +452,9 @@ function limparTudo() {
   document.getElementById("emailPadrao").value = "";
   document.getElementById("totalPlanilha").innerText = "0";
   document.getElementById("totalFiltrado").innerText = "0";
+  document.getElementById("totalBases").innerText = "0";
   document.getElementById("resultado").innerHTML = "";
-  dadosFiltrados = [];
+  gruposPorBase = {};
 }
 </script>
 
