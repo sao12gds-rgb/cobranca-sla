@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cobrança Preventiva SLA</title>
+  <title>Cobrança de Entrega em Atraso</title>
 
   <style>
     * {
@@ -59,7 +59,7 @@
 
     textarea {
       margin-top: 20px;
-      height: 330px;
+      height: 340px;
       resize: vertical;
       line-height: 1.5;
       background: #f9fafb;
@@ -72,15 +72,13 @@
       flex-wrap: wrap;
     }
 
-    button, a.botao {
+    button {
       border: none;
       padding: 12px 18px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      text-decoration: none;
       font-size: 14px;
-      display: inline-block;
     }
 
     .principal {
@@ -88,14 +86,14 @@
       color: white;
     }
 
-    .secundario {
-      background: #e5e7eb;
-      color: #111827;
-    }
-
-    .sucesso {
+    .verde {
       background: #198754;
       color: white;
+    }
+
+    .cinza {
+      background: #e5e7eb;
+      color: #111827;
     }
 
     .aviso {
@@ -120,10 +118,15 @@
 <body>
 
   <div class="container">
-    <h1>Cobrança Preventiva SLA</h1>
-    <p class="subtitulo">Preencha os dados da carga e gere o e-mail padrão automaticamente.</p>
+    <h1>Cobrança de Entrega em Atraso</h1>
+    <p class="subtitulo">Preencha os dados da carga para gerar o e-mail de cobrança com SLA vencido.</p>
 
     <div class="grid">
+      <div>
+        <label>E-mail Destinatário</label>
+        <input type="email" id="destinatario" placeholder="exemplo@empresa.com">
+      </div>
+
       <div>
         <label>AWB</label>
         <input type="text" id="awb" placeholder="Ex: 55362226">
@@ -140,44 +143,40 @@
       </div>
 
       <div>
-        <label>Status</label>
+        <label>Status Atual</label>
         <select id="status">
           <option value="Pendente Desembarque">Pendente Desembarque</option>
           <option value="Pendente Tratativa">Pendente Tratativa</option>
           <option value="Pendente Saída para Entrega">Pendente Saída para Entrega</option>
           <option value="Pendente Entrega">Pendente Entrega</option>
-          <option value="Em acompanhamento">Em acompanhamento</option>
+          <option value="Em atraso">Em atraso</option>
         </select>
       </div>
 
       <div>
-        <label>Previsão SLA</label>
+        <label>SLA Previsto</label>
         <input type="date" id="sla">
-      </div>
-
-      <div>
-        <label>Base / Responsável</label>
-        <input type="text" id="responsavel" placeholder="Opcional">
       </div>
     </div>
 
     <div class="botoes">
-      <button class="principal" onclick="gerarEmail()">Gerar e-mail</button>
-      <button class="sucesso" onclick="copiarEmail()">Copiar texto</button>
-      <a class="botao secundario" href="https://outlook.office.com/mail/deeplink/compose" target="_blank">Abrir Outlook Web</a>
-      <a class="botao secundario" href="https://mail.google.com/mail/u/0/#inbox?compose=new" target="_blank">Abrir Gmail</a>
+      <button class="principal" onclick="gerarEmail()">Gerar E-mail</button>
+      <button class="verde" onclick="abrirOutlook()">Abrir no Outlook Web</button>
+      <button class="cinza" onclick="copiarEmail()">Copiar Texto</button>
+      <button class="cinza" onclick="limparCampos()">Limpar</button>
     </div>
 
     <textarea id="textoEmail" placeholder="O texto do e-mail aparecerá aqui..."></textarea>
 
     <p class="aviso">
-      Após copiar o texto, abra o Outlook ou Gmail e cole no corpo do e-mail.
+      O botão “Abrir no Outlook Web” abre uma nova mensagem com destinatário, assunto e corpo preenchidos.
     </p>
   </div>
 
 <script>
 function formatarData(data) {
   if (!data) return "";
+
   const partes = data.split("-");
   return partes[2] + "/" + partes[1] + "/" + partes[0];
 }
@@ -191,33 +190,59 @@ function gerarEmail() {
 
   const texto = `Prezados,
 
-Encaminhamos este e-mail como preventivo para acompanhamento da carga abaixo, com atenção ao cumprimento do SLA:
+Identificamos que a remessa abaixo encontra-se com o SLA vencido, sem registro de entrega até o momento:
 
 AWB: ${awb}
 Origem: ${origem}
 Destino: ${destino}
-Status: ${status}
-Previsão SLA: ${sla}
+Status Atual: ${status}
+SLA Previsto: ${sla}
 
-Solicitamos, por gentileza, o acompanhamento prioritário da chegada, tratativa e entrega desta remessa, garantindo o cumprimento do prazo acordado.
+Solicitamos atuação imediata para conclusão da entrega e regularização da ocorrência.
 
-Caso identifiquem qualquer dificuldade operacional, pedimos que nos acionem imediatamente para atuarmos de forma conjunta e evitar impacto na entrega.
+Pedimos, por gentileza, retorno com a previsão atualizada de entrega e detalhamento das ações adotadas para tratativa do embarque.
 
-Ficamos à disposição para suporte.`;
+Em caso de qualquer impedimento operacional, favor informar imediatamente para alinhamento conjunto e mitigação dos impactos ao cliente.
+
+Aguardamos posicionamento com prioridade.
+
+Atenciosamente,`;
 
   document.getElementById("textoEmail").value = texto;
+  return texto;
+}
+
+function abrirOutlook() {
+  const destinatario = document.getElementById("destinatario").value.trim();
+  const awb = document.getElementById("awb").value.trim();
+  const texto = gerarEmail();
+
+  const assunto = `Cobrança de Entrega em Atraso - AWB ${awb}`;
+
+  const url = "https://outlook.office.com/mail/deeplink/compose"
+    + "?to=" + encodeURIComponent(destinatario)
+    + "&subject=" + encodeURIComponent(assunto)
+    + "&body=" + encodeURIComponent(texto);
+
+  window.open(url, "_blank");
 }
 
 function copiarEmail() {
-  gerarEmail();
+  const texto = gerarEmail();
 
-  const texto = document.getElementById("textoEmail");
-  texto.select();
-  texto.setSelectionRange(0, 99999);
-
-  navigator.clipboard.writeText(texto.value).then(function() {
+  navigator.clipboard.writeText(texto).then(function() {
     alert("Texto copiado com sucesso!");
   });
+}
+
+function limparCampos() {
+  document.getElementById("destinatario").value = "";
+  document.getElementById("awb").value = "";
+  document.getElementById("origem").value = "";
+  document.getElementById("destino").value = "";
+  document.getElementById("status").value = "Pendente Desembarque";
+  document.getElementById("sla").value = "";
+  document.getElementById("textoEmail").value = "";
 }
 </script>
 
