@@ -2,84 +2,190 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>E-mail de Cobrança SLA</title>
+  <title>Cobrança Preventiva SLA</title>
+
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f4f4f4;
+    }
+
+    body {
+      margin: 0;
+      background: #eef2f7;
+      color: #1f2937;
     }
 
     .container {
-      background: white;
-      padding: 25px;
-      max-width: 700px;
-      margin: auto;
-      border-radius: 8px;
+      max-width: 900px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
     }
 
-    input, textarea, button {
+    h1 {
+      margin-top: 0;
+      color: #003b73;
+      font-size: 26px;
+    }
+
+    .subtitulo {
+      color: #6b7280;
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input, select, textarea {
       width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      margin-bottom: 15px;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
       font-size: 14px;
     }
 
-    button {
-      cursor: pointer;
-      background: #005baa;
-      color: white;
-      border: none;
-      border-radius: 5px;
+    textarea {
+      margin-top: 20px;
+      height: 330px;
+      resize: vertical;
+      line-height: 1.5;
+      background: #f9fafb;
     }
 
-    textarea {
-      height: 300px;
+    .botoes {
+      display: flex;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    button, a.botao {
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+      display: inline-block;
+    }
+
+    .principal {
+      background: #005baa;
+      color: white;
+    }
+
+    .secundario {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .sucesso {
+      background: #198754;
+      color: white;
+    }
+
+    .aviso {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        margin: 20px;
+        padding: 22px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<div class="container">
-  <h2>E-mail de Cobrança SLA</h2>
+  <div class="container">
+    <h1>Cobrança Preventiva SLA</h1>
+    <p class="subtitulo">Preencha os dados da carga e gere o e-mail padrão automaticamente.</p>
 
-  <label>Destinatário:</label>
-  <input type="email" id="destinatario" placeholder="exemplo@email.com">
+    <div class="grid">
+      <div>
+        <label>AWB</label>
+        <input type="text" id="awb" placeholder="Ex: 55362226">
+      </div>
 
-  <label>AWB:</label>
-  <input type="text" id="awb" placeholder="55362226">
+      <div>
+        <label>Origem</label>
+        <input type="text" id="origem" placeholder="Ex: SAO12">
+      </div>
 
-  <label>Origem:</label>
-  <input type="text" id="origem" placeholder="SAO12">
+      <div>
+        <label>Destino</label>
+        <input type="text" id="destino" placeholder="Ex: SDU">
+      </div>
 
-  <label>Destino:</label>
-  <input type="text" id="destino" placeholder="SDU">
+      <div>
+        <label>Status</label>
+        <select id="status">
+          <option value="Pendente Desembarque">Pendente Desembarque</option>
+          <option value="Pendente Tratativa">Pendente Tratativa</option>
+          <option value="Pendente Saída para Entrega">Pendente Saída para Entrega</option>
+          <option value="Pendente Entrega">Pendente Entrega</option>
+          <option value="Em acompanhamento">Em acompanhamento</option>
+        </select>
+      </div>
 
-  <label>Status:</label>
-  <input type="text" id="status" placeholder="Pendente Desembarque">
+      <div>
+        <label>Previsão SLA</label>
+        <input type="date" id="sla">
+      </div>
 
-  <label>Previsão SLA:</label>
-  <input type="date" id="sla">
+      <div>
+        <label>Base / Responsável</label>
+        <input type="text" id="responsavel" placeholder="Opcional">
+      </div>
+    </div>
 
-  <button onclick="gerarEmail()">Gerar E-mail</button>
-  <button onclick="abrirEmail()">Abrir no Outlook/Gmail</button>
+    <div class="botoes">
+      <button class="principal" onclick="gerarEmail()">Gerar e-mail</button>
+      <button class="sucesso" onclick="copiarEmail()">Copiar texto</button>
+      <a class="botao secundario" href="https://outlook.office.com/mail/deeplink/compose" target="_blank">Abrir Outlook Web</a>
+      <a class="botao secundario" href="https://mail.google.com/mail/u/0/#inbox?compose=new" target="_blank">Abrir Gmail</a>
+    </div>
 
-  <label>Texto gerado:</label>
-  <textarea id="textoEmail"></textarea>
-</div>
+    <textarea id="textoEmail" placeholder="O texto do e-mail aparecerá aqui..."></textarea>
+
+    <p class="aviso">
+      Após copiar o texto, abra o Outlook ou Gmail e cole no corpo do e-mail.
+    </p>
+  </div>
 
 <script>
 function formatarData(data) {
   if (!data) return "";
   const partes = data.split("-");
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return partes[2] + "/" + partes[1] + "/" + partes[0];
 }
 
 function gerarEmail() {
-  const awb = document.getElementById("awb").value;
-  const origem = document.getElementById("origem").value;
-  const destino = document.getElementById("destino").value;
+  const awb = document.getElementById("awb").value.trim();
+  const origem = document.getElementById("origem").value.trim();
+  const destino = document.getElementById("destino").value.trim();
   const status = document.getElementById("status").value;
   const sla = formatarData(document.getElementById("sla").value);
 
@@ -102,16 +208,16 @@ Ficamos à disposição para suporte.`;
   document.getElementById("textoEmail").value = texto;
 }
 
-function abrirEmail() {
+function copiarEmail() {
   gerarEmail();
 
-  const destinatario = document.getElementById("destinatario").value;
-  const awb = document.getElementById("awb").value;
-  const texto = document.getElementById("textoEmail").value;
+  const texto = document.getElementById("textoEmail");
+  texto.select();
+  texto.setSelectionRange(0, 99999);
 
-  const assunto = `Cobrança Preventiva SLA - AWB ${awb}`;
-
-  window.location.href = `mailto:${destinatario}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`;
+  navigator.clipboard.writeText(texto.value).then(function() {
+    alert("Texto copiado com sucesso!");
+  });
 }
 </script>
 
