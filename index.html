@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>E-mail de Cobrança SLA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background: #f4f4f4;
+    }
+
+    .container {
+      background: white;
+      padding: 25px;
+      max-width: 700px;
+      margin: auto;
+      border-radius: 8px;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      background: #005baa;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    textarea {
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>E-mail de Cobrança SLA</h2>
+
+  <label>Destinatário:</label>
+  <input type="email" id="destinatario" placeholder="exemplo@email.com">
+
+  <label>AWB:</label>
+  <input type="text" id="awb" placeholder="55362226">
+
+  <label>Origem:</label>
+  <input type="text" id="origem" placeholder="SAO12">
+
+  <label>Destino:</label>
+  <input type="text" id="destino" placeholder="SDU">
+
+  <label>Status:</label>
+  <input type="text" id="status" placeholder="Pendente Desembarque">
+
+  <label>Previsão SLA:</label>
+  <input type="date" id="sla">
+
+  <button onclick="gerarEmail()">Gerar E-mail</button>
+  <button onclick="abrirEmail()">Abrir no Outlook/Gmail</button>
+
+  <label>Texto gerado:</label>
+  <textarea id="textoEmail"></textarea>
+</div>
+
+<script>
+function formatarData(data) {
+  if (!data) return "";
+  const partes = data.split("-");
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function gerarEmail() {
+  const awb = document.getElementById("awb").value;
+  const origem = document.getElementById("origem").value;
+  const destino = document.getElementById("destino").value;
+  const status = document.getElementById("status").value;
+  const sla = formatarData(document.getElementById("sla").value);
+
+  const texto = `Prezados,
+
+Encaminhamos este e-mail como preventivo para acompanhamento da carga abaixo, com atenção ao cumprimento do SLA:
+
+AWB: ${awb}
+Origem: ${origem}
+Destino: ${destino}
+Status: ${status}
+Previsão SLA: ${sla}
+
+Solicitamos, por gentileza, o acompanhamento prioritário da chegada, tratativa e entrega desta remessa, garantindo o cumprimento do prazo acordado.
+
+Caso identifiquem qualquer dificuldade operacional, pedimos que nos acionem imediatamente para atuarmos de forma conjunta e evitar impacto na entrega.
+
+Ficamos à disposição para suporte.`;
+
+  document.getElementById("textoEmail").value = texto;
+}
+
+function abrirEmail() {
+  gerarEmail();
+
+  const destinatario = document.getElementById("destinatario").value;
+  const awb = document.getElementById("awb").value;
+  const texto = document.getElementById("textoEmail").value;
+
+  const assunto = `Cobrança Preventiva SLA - AWB ${awb}`;
+
+  window.location.href = `mailto:${destinatario}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`;
+}
+</script>
+
+</body>
+</html>
